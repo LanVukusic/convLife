@@ -10,6 +10,7 @@ class Game_of_life (torch.nn.Module):
         self.conv.weight = torch.nn.Parameter(torch.tensor([[[[1, 1, 1], [1, 0, 1], [1, 1, 1]]]], requires_grad=False).float())
         self.lookup = torch.nn.Parameter(torch.tensor([0,0,0,1,0,0,0,0,0, 0,0,1,1,0,0,0,0,0], requires_grad=False).int(), requires_grad=False)
 
+    @torch.no_grad()
     def forward(self, x):
         neigh = self.conv(x.float()).int()
         
