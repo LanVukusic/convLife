@@ -1,12 +1,13 @@
 import torch
 
+torch.nn.Softmax()
 class softmaxLegit2D(torch.nn.Module):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
     
     def forward(self, x):
         ex = torch.exp(x)
-        return ex / (torch.sum(ex, dim=(2,3)).unsqueeze(-1).unsqueeze(-1))
+        return ex / (torch.sum(ex, dim=(2,3)).unsqueeze(-1).unsqueeze(-1) + 1e-15)
     
     
 class BasicBlock(torch.nn.Module):
@@ -20,18 +21,23 @@ class BasicBlock(torch.nn.Module):
         self.relu = torch.nn.ReLU(inplace=True)
         self.conv2 = torch.nn.Conv2d(planes, planes, 3, 1, 1)
         self.bn2 = torch.nn.BatchNorm2d(planes)
+        if inplanes != planes:
+            self.cconv = torch.nn.Conv2d(inplanes, planes, 3, 1, 1)
         self.stride = stride
 
     def forward(self, x):
+        identity = x
         out = self.conv1(x)
-        identity = out
         out = self.bn1(out)
         out = self.relu(out)
 
         out = self.conv2(out)
         out = self.bn2(out)
-
-        out += identity
+        # print(out.shape, identity.repeat(1, out.shape[1]//identity.shape[1], 1, 1).shape)
+        if out.shape != identity.shape:
+            out += self.cconv(identity)
+        else:
+            out += identity
         out = self.relu(out)
 
         return out
@@ -48,8 +54,12 @@ class KaoResnet (torch.nn.Module):
         self.b1 = BasicBlock(2, 16)
         self.b2 = BasicBlock(16, 16)
         self.b3 = BasicBlock(16, 16)
+        self.b4 = BasicBlock(16, 16)
+        self.b5 = BasicBlock(16, 16)
+        self.b6 = BasicBlock(16, 16)
 
-        self.b4 = BasicBlock(16, 1)
+        self.b7 = BasicBlock(16, 1)
+        self.sig = torch.nn.Sigmoid()
         self.soft = softmaxLegit2D()
 
     
@@ -61,12 +71,16 @@ class KaoResnet (torch.nn.Module):
         x = x.float()
 
         # model
-        b1 = self.b1(x)
+        out = self.b1(x)
 
-        b2 = self.b2(b1)
-        b3 = self.b3(b2)
-        b3 = b3 + b1
+        out = self.b2(out)
+        out = self.b3(out)
+        out = self.b4(out)
+        out = self.b5(out)
+        out = self.b6(out)
+        # print(x.repeat(1,b3.shape[1]//2, 1, 1))
+        out = out + x.repeat(1,out.shape[1]//2, 1, 1)
 
-        b4 = self.b4(b3)
+        out = self.b7(out)
 
-        return self.soft(b4)
+        return self.soft(self.sig(out))
