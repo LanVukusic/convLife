@@ -2,6 +2,7 @@ from collections import deque, namedtuple
 import random
 import torch
 from game_of_life import Game_of_life
+from matplotlib import pyplot as plt
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -15,9 +16,10 @@ class ReplayMemory(object):
     def __init__(self, capacity):
         self.memory = deque([], maxlen=capacity)
 
-    def push(self, *args):
+    def push(self, state, action, next_state, reward):
         """Save a transition"""
-        self.memory.append(Transition(*args))
+        for b in range(state.shape[0]):
+            self.memory.append(Transition(state[b].unsqueeze(0), action[b].unsqueeze(0), next_state[b].unsqueeze(0), reward[b]))
 
     def sample(self, batch_size):
         return random.sample(self.memory, batch_size)
@@ -58,7 +60,11 @@ def select_action(state:torch.Tensor, eps_threshold:float, policy_net:torch.nn.M
             # for _ in max_moves:
             # print("select_action", state.shape, mask.shape)
             # print("neki")
-            return get_choice(policy_net.place(state, mask))
+            out = policy_net.place(state, mask)
+            # plt.imshow(out[0][0].cpu().numpy())
+            # plt.show()
+            # print(out[0])
+            return get_choice(out)
                 # state += choice
 
     else:
@@ -98,6 +104,10 @@ class GameEnv():
         return self.state, self.reward()
     
     def reward(self):
-        return torch.sum(self.state == self.mask, (1,2))
+        inside = torch.sum(self.state * self.mask, (2,3))
+        outside = torch.sum(self.state * ((self.mask + 1) % 2), (2,3))
+        # out = torch.sum(torch.square(self.state - self.mask), (2,3))
+        # print(out.shape)
+        return 2 * inside - outside
         # print(torch.argmax(torch.argmax(self.actions[-1], dim=-1), dim=-1).shape)
         # return torch.argmax(torch.argmax(self.actions[-1], dim=-1), dim=-1)
