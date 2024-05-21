@@ -26,10 +26,12 @@ class ReplayMemory(object):
 
     def __len__(self):
         return len(self.memory)
+
+# def get_choice2(batch:torch.Tensor):
+#     out = (batch > 0.8).int()
+#     return out
     
 def get_choice(batch:torch.Tensor):
-    # print("get_choice", batch.shape, batch[0])
-    # print(batch[0, 0])
     shp = batch.shape[1:]
     size = batch.shape[-1]
     flt = batch.flatten(1,-1)
@@ -65,6 +67,7 @@ def select_action(state:torch.Tensor, eps_threshold:float, policy_net:torch.nn.M
             # plt.show()
             # print(out[0])
             return get_choice(out)
+            # return get_choice(out)
                 # state += choice
 
     else:
@@ -104,10 +107,13 @@ class GameEnv():
         return self.state, self.reward()
     
     def reward(self):
+        # mask_pixles_count = torch.sum(self.mask)
         inside = torch.sum(self.state * self.mask, (2,3))
         outside = torch.sum(self.state * ((self.mask + 1) % 2), (2,3))
         # out = torch.sum(torch.square(self.state - self.mask), (2,3))
         # print(out.shape)
-        return 2 * inside - outside
+        out = inside -  outside / 10
+        # out = torch.nn.functional.sigmoid(out/20.0)*20.0
+        return out
         # print(torch.argmax(torch.argmax(self.actions[-1], dim=-1), dim=-1).shape)
         # return torch.argmax(torch.argmax(self.actions[-1], dim=-1), dim=-1)
