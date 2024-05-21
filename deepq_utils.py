@@ -48,6 +48,21 @@ def get_choice(batch:torch.Tensor):
     # if torch.sum(pixle_place_mask) != batch.shape[0]:
     #     raise Exception(f"JOJ NE! {torch.sum(pixle_place_mask)} ni {batch.shape[0]}")
     # return pixle_place_mask
+
+def generate_batch(batch_size, size, sims=5):
+    with torch.no_grad():
+        game = Game_of_life(size)
+        # game.cuda()
+        # random binary noise of size size x size
+        prev_batch = torch.randint(0, 2, (batch_size, 1, size, size))
+        # prev_batch.cuda()
+        batch = game(prev_batch)
+        for i in range(sims):
+            batch, prev_batch = game(batch), batch
+
+        # return torch.nn.functional.one_hot(prev_batch.long(), 2).float(), torch.nn.functional.one_hot(batch.long(), 2).float()
+        
+        return batch 
     
 def select_action(state:torch.Tensor, eps_threshold:float, policy_net:torch.nn.Module, mask:torch.Tensor) -> torch.Tensor:
     sample = random.random()
@@ -88,31 +103,23 @@ class GameEnv():
 
     def reset(self):
         self.actions = []
-        # with torch.no_grad():
-            # game.cuda()
-            # random binary noise of size size x size
-            # prev_batch = torch.randint(0, 2, (self.batch_size, 1, self.size, self.size)).to(device)
-            # prev_batch.cuda()
-            # batch = self.game(prev_batch)
-            # for i in range(random.randint(1,5)):
-            #     batch, prev_batch = self.game(batch), batch
-        # self.state = batch
-        self.state = torch.zeros((self.batch_size, 1, self.size, self.size)).to(device)
+        self.state = generate_batch(self.batch_size, self.size).to(device)
+        # self.state = torch.zeros((self.batch_size, 1, self.size, self.size)).to(device)
         return self.state 
 
     def step(self, action):
         self.actions.append(action)
-        # self.state = self.game((self.state + action) % 2)
         self.state = (self.state + action) % 2
+        self.state = self.game(self.state)
         return self.state, self.reward()
     
     def reward(self):
         # mask_pixles_count = torch.sum(self.mask)
         inside = torch.sum(self.state * self.mask, (2,3))
-        outside = torch.sum(self.state * ((self.mask + 1) % 2), (2,3))
+        # outside = torch.sum(self.state * ((self.mask + 1) % 2), (2,3))
         # out = torch.sum(torch.square(self.state - self.mask), (2,3))
         # print(out.shape)
-        out = inside -  outside / 10
+        out = inside
         # out = torch.nn.functional.sigmoid(out/20.0)*20.0
         return out
         # print(torch.argmax(torch.argmax(self.actions[-1], dim=-1), dim=-1).shape)
