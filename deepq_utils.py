@@ -54,7 +54,8 @@ def generate_batch(batch_size, size, sims=5):
         game = Game_of_life(size)
         # game.cuda()
         # random binary noise of size size x size
-        prev_batch = torch.randint(0, 2, (batch_size, 1, size, size))
+        # prev_batch = torch.randint(0, 2, (batch_size, 1, size, size))
+        prev_batch = (torch.rand((batch_size, 1, size, size)) > 0.9).int()
         # prev_batch.cuda()
         batch = game(prev_batch)
         for i in range(sims):
@@ -97,7 +98,7 @@ class GameEnv():
         self.size = size
         self.batch_size = batch_size
         self.game = Game_of_life(self.size).to(device)
-        self.state = self.reset()
+        self.state: torch.Tensor = self.reset()
         self.mask = mask.to(device)
         self.actions = []
 
