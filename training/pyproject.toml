@@ -3,9 +3,12 @@ name = "convlife"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 dependencies = [
+    "ipykernel>=6.29.5",
     "matplotlib>=3.10.0",
+    "onnx>=1.17.0",
+    "onnxscript>=0.2.0",
     "torch>=2.6.0",
     "tqdm>=4.67.1",
 ]
