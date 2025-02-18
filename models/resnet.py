@@ -56,9 +56,9 @@ class KaoResnet (torch.nn.Module):
 
         self.b1 = BasicBlock(2, 16)
         self.b2 = BasicBlock(16, 16)
-        # self.b3 = BasicBlock(16, 16)
-        # self.b4 = BasicBlock(16, 16)
-        # self.b5 = BasicBlock(16, 16)
+        self.b3 = BasicBlock(16, 16)
+        self.b4 = BasicBlock(16, 16)
+        self.b5 = BasicBlock(16, 16)
         self.b6 = BasicBlock(16, 16)
 
         # self.b7 = BasicBlock(16, 1)
@@ -78,9 +78,9 @@ class KaoResnet (torch.nn.Module):
         out = self.b1(x)
 
         out = self.b2(out)
-        # out = self.b3(out)
-        # out = self.b4(out)
-        # out = self.b5(out)
+        out = self.b3(out)
+        out = self.b4(out)
+        out = self.b5(out)
         out = self.b6(out)
         # print(x.repeat(1,b3.shape[1]//2, 1, 1))
         out = out + x.repeat(1,out.shape[1]//2, 1, 1)

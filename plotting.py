@@ -2,7 +2,7 @@ from IPython import display
 import matplotlib.pyplot as plt
 import numpy as np
 
-def plot_state(state, actions, rewards, mask, first_model_preds, second_model_preds):
+def plot_state(state, actions, rewards, mask, first_model_preds):
   batch_size = state.shape[0]
   display.clear_output(wait=True)
   plotstate = state
@@ -11,7 +11,7 @@ def plot_state(state, actions, rewards, mask, first_model_preds, second_model_pr
   actions = (actions / np.max(actions))
   
   fig = plt.figure(figsize=(16,6))
-  gs = fig.add_gridspec(4, state.shape[0],)
+  gs = fig.add_gridspec(3, state.shape[0],)
 
   # images for mask, actions, states
   for i in range(batch_size):
@@ -44,11 +44,11 @@ def plot_state(state, actions, rewards, mask, first_model_preds, second_model_pr
     ax.set_yticks([])
   
   # model outputs
-  for i in range(batch_size):
-    ax = fig.add_subplot(gs[3, i])
-    ax.imshow(second_model_preds[i][0])
-    ax.set_xticks([])
-    ax.set_yticks([])
+  # for i in range(batch_size):
+  #   ax = fig.add_subplot(gs[3, i])
+  #   ax.imshow(second_model_preds[i][0])
+  #   ax.set_xticks([])
+  #   ax.set_yticks([])
   
   plt.ioff()
   display.display(plt.gcf())
