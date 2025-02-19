@@ -12,8 +12,7 @@ class Game_of_life (torch.nn.Module):
 
     def forward(self, x):
         neigh = self.conv(x.float()).int()
-        
-        out = self.lookup[neigh + x*9]
+        out = self.lookup[neigh + x.int()*9]
         
         return out.view(-1, 1, self.size, self.size)
     
