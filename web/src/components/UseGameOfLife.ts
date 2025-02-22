@@ -33,17 +33,16 @@ export const useGameOfLife = (gridSize: number) => {
       return;
     }
 
-    if (help == "random") {
-      const x = Math.round(Math.random() * (gridSize - 1));
-      const y = Math.round(Math.random() * (gridSize - 1));
-      game.toggle(y, x);
-    }
-
     // if(help == "ai"){
     //   const out = forward(game.worldGrid).
     // }
 
     game?.step();
+    if (help == "random") {
+      const x = Math.round(Math.random() * (gridSize - 1));
+      const y = Math.round(Math.random() * (gridSize - 1));
+      game.toggle(y, x);
+    }
     setState(game?.worldGrid);
     setHistory([
       {

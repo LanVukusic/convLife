@@ -15,7 +15,7 @@ export class GameOfLife {
     this.worldGrid = new Array(this.gridSize)
       .fill(false)
       .map(() =>
-        new Array(this.gridSize).fill(false).map(() => Math.random() > 0.8)
+        new Array(this.gridSize).fill(false).map(() => Math.random() > 0.85)
       );
   }
 
