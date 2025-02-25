@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { GameOfLife } from "./GameOfLifeEngine";
 import { useModel } from "./ModelRunner";
 
+const modelPath = "/model8.onnx";
+
 interface History {
   iteration: number;
   live: number;
@@ -13,9 +15,13 @@ export const useGameOfLife = (gridSize: number) => {
   const [state, setState] = useState<boolean[][]>();
   const [isPlaying, setIsPlayling] = useState(true);
   const [history, setHistory] = useState<History[]>([]);
-  const [help, setHelp] = useState<"no" | "random" | "ai">("no");
+  const [lastHint, setLastHint] = useState<
+    { x: number; y: number } | undefined
+  >();
+  const [lastPredictions, setLstPredictions] = useState<Float32Array>();
+  const [help, setHelp] = useState<"no" | "random" | "ai">("ai");
 
-  const { forward, isError, isLoading } = useModel("");
+  const { forward, isError, isLoading } = useModel(modelPath);
 
   useEffect(() => {
     const g = new GameOfLife(gridSize);
@@ -28,21 +34,38 @@ export const useGameOfLife = (gridSize: number) => {
     setState(game?.worldGrid);
   }, [game]);
 
-  const st = useCallback(() => {
+  const st = useCallback(async () => {
     if (!game) {
       return;
     }
 
-    // if(help == "ai"){
-    //   const out = forward(game.worldGrid).
-    // }
-
     game?.step();
+    if (help == "no") {
+      setLastHint(undefined);
+      setLstPredictions(undefined);
+    }
+    if (help == "ai") {
+      if (game.worldGrid) {
+        const out = await forward(
+          game.worldGrid.map((y) => y.map((x) => (x ? 1.0 : 0)))
+        );
+
+        if (out) {
+          setLastHint({ x: out?.x, y: out?.y });
+          setLstPredictions(out.predictions);
+          game.toggle(out.y, out.x);
+        }
+      }
+    }
+
     if (help == "random") {
+      setLstPredictions(undefined);
       const x = Math.round(Math.random() * (gridSize - 1));
       const y = Math.round(Math.random() * (gridSize - 1));
       game.toggle(y, x);
+      setLastHint({ x, y });
     }
+
     setState(game?.worldGrid);
     setHistory([
       {
@@ -52,7 +75,7 @@ export const useGameOfLife = (gridSize: number) => {
       },
       ...history.slice(0, 10),
     ]);
-  }, [game, gridSize, help, history]);
+  }, [forward, game, gridSize, help, history]);
 
   const toggle = useCallback(
     (y: number, x: number) => {
@@ -73,7 +96,7 @@ export const useGameOfLife = (gridSize: number) => {
       if (isPlaying) {
         st();
       }
-    }, 500);
+    }, 100);
 
     return () => {
       clearInterval(timer);
@@ -92,5 +115,7 @@ export const useGameOfLife = (gridSize: number) => {
     setHelp,
     isError,
     isLoading,
+    lastHint,
+    lastPredictions,
   };
 };

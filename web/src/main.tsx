@@ -6,7 +6,7 @@ import { App } from "./App";
 
 export const vpurp = "#440154";
 export const vyel = "#fde725";
-export const vgreen = "#2a788e";
+export const vgreen = "#29AF7F";
 
 const theme = createTheme({
   primaryColor: "vpurple",
